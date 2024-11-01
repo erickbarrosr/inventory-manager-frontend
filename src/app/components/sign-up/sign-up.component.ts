@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+import { tap } from 'rxjs';
 import { SignUpService } from 'src/app/services/sign-up.service';
-
+import { ToastrService } from 'ngx-toastr';
 @Component({
   selector: 'app-sign-up',
   templateUrl: './sign-up.component.html',
@@ -9,16 +11,29 @@ import { SignUpService } from 'src/app/services/sign-up.service';
 })
 export class SignUpComponent implements OnInit {
   signUpForm!: FormGroup;
-  response: any;
+  spinner: boolean = false;
 
-  constructor(private fb: FormBuilder, private signUpService: SignUpService) {}
+  constructor(
+    private fb: FormBuilder,
+    private signUpService: SignUpService,
+    private router: Router,
+    private toastr: ToastrService
+  ) {}
 
   ngOnInit(): void {
+    this.spinner = true;
+
+    this.initializeForm();
+
+    this.spinner = false;
+  }
+
+  private initializeForm(): void {
     this.signUpForm = this.fb.group(
       {
         name: ['', Validators.required],
         email: ['', [Validators.required, Validators.email]],
-        password: ['', [Validators.required, Validators.minLength(6)]],
+        password: ['', [Validators.required, Validators.minLength(8)]],
         confirmPassword: ['', Validators.required],
       },
       { validators: this.passwordsMatchValidator }
@@ -43,16 +58,31 @@ export class SignUpComponent implements OnInit {
       : { mismatch: true };
   }
 
-  async onFormSubmit() {
-    if (this.signUpForm.valid) {
-      try {
-        this.response = await this.signUpService.register(
-          this.signUpForm.value
-        );
-        console.log('Usuário cadastrado com sucesso', this.response);
-      } catch (error) {
-        console.error('Erro no cadastro', error);
-      }
-    }
+  onFormSubmit(): void {
+    if (this.signUpForm.invalid) return;
+
+    this.spinner = true;
+
+    this.signUpService
+      .register({ formData: this.signUpForm.value })
+      .pipe(
+        tap({
+          next: () => {
+            this.toastr.success('Usuário cadastrado com sucesso!');
+            this.router.navigate(['/login']);
+            this.signUpForm.reset();
+          },
+          error: (error) => {
+            const errorMessage =
+              error.message ?? 'Erro no cadastro. Por favor, tente novamente.';
+            this.toastr.error(errorMessage);
+            console.error('Erro no cadastro', error);
+          },
+          finalize: () => {
+            this.spinner = false;
+          },
+        })
+      )
+      .subscribe();
   }
 }

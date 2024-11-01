@@ -1,6 +1,12 @@
 <div class="min-h-screen flex items-center justify-center bg-gray-100">
   <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
 
+    <div *ngIf="spinner" class="flex justify-center mb-4">
+      <div class="spinner-border" role="status">
+        <span class="sr-only">Loading...</span>
+      </div>
+    </div>
+
     <div class="flex justify-center mb-6">
       <img src="assets/logo.png" alt="Logo" class="w-40 h-40 object-contain">
     </div>
@@ -34,7 +40,7 @@
           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           [ngClass]="{ 'border-red-500': isFieldInvalid('password') }" />
         <div *ngIf="isFieldInvalid('password')" class="text-red-500 text-sm mt-1">
-          A senha é obrigatória (mínimo de 6 caracteres).
+          A senha é obrigatória (mínimo de 8 caracteres).
         </div>
       </div>
 
@@ -50,7 +56,7 @@
 
       <button type="submit"
         class="w-full bg-orange-600 text-white py-2 px-4 rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
-        [disabled]="signUpForm.invalid">
+        [disabled]="signUpForm.invalid || spinner">
         Cadastrar
       </button>
 
